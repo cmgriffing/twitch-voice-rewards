@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Vapi from "@vapi-ai/web";
-import { Input, Flex, Text, PasswordInput } from "@mantine/core";
+import { Input, Flex, Text, PasswordInput, Checkbox } from "@mantine/core";
 
 import "./App.css";
 import tmi from "tmi.js";
@@ -22,12 +22,52 @@ fields needed for config
 
 */
 
+async function initiateVapiResponse(
+  channel: string,
+  username: string,
+  usedBits: number,
+  minBits: number,
+  vapiAssistantId: string,
+  vapiPublicKey: string,
+  vapiInstance?: Vapi
+) {
+  if (minBits < 1) {
+    console.log("Min Bits must be greater than 1.");
+    return;
+  }
+
+  if (usedBits >= minBits) {
+    // do the vapi thing
+    if (vapiInstance) {
+      try {
+        await vapiInstance.start(vapiAssistantId);
+        await vapiInstance.send({
+          type: "add-message",
+          message: {
+            role: "user",
+            content: `The username is ${username}`,
+          },
+        });
+      } catch (e: unknown) {
+        console.log("Error starting assistant or sending message.", e);
+      }
+    } else {
+      console.log("No vapiInstance found. Were all fields filled out?", {
+        channel,
+        vapiAssistantId,
+        vapiPublicKey,
+      });
+    }
+  }
+}
+
 function App() {
   const [channelName, setChannelName] = useState("");
   const [vapiPublicKey, setVapiPublicKey] = useState("");
   const [vapiAssistantId, setVapiAssistantId] = useState("");
   const [minBits, setMinBits] = useState(100);
   const [vapiInstance, setVapiInstance] = useState<Vapi>();
+  const [isDebugging, setIsDebugging] = useState(false);
 
   useEffect(() => {
     const client = new tmi.Client({
@@ -44,44 +84,47 @@ function App() {
         await client.connect();
 
         client.on("cheer", async (channel, userstate, message) => {
-          console.log("CHEER: ", {
-            channel,
-            userstate, // userstate.bits is what we care about mainly
-            message,
-          });
-
-          if (minBits < 1) {
-            console.log("Min Bits must be greater than 1.");
-            return;
-          }
-
-          if (parseInt(userstate?.bits || "0", 10) > minBits) {
-            // do the vapi thing
-            if (vapiInstance) {
-              try {
-                await vapiInstance.start(vapiAssistantId);
-                await vapiInstance.send({
-                  type: "add-message",
-                  message: {
-                    role: "user",
-                    content: `The username is ${userstate.username}`,
-                  },
-                });
-              } catch (e: unknown) {
-                console.log("Error starting assistant or sending message.", e);
-              }
-            } else {
-              console.log(
-                "No vapiInstance found. Were all fields filled out?",
-                {
-                  channelName,
-                  vapiAssistantId,
-                  vapiPublicKey,
-                }
+          try {
+            console.log("CHEER:", { channel, userstate, message });
+            if (userstate?.bits && userstate.username) {
+              const usedBits = parseInt(userstate?.bits, 10);
+              await initiateVapiResponse(
+                channelName,
+                userstate.username,
+                usedBits,
+                minBits,
+                vapiAssistantId,
+                vapiPublicKey,
+                vapiInstance
               );
             }
+          } catch (e: unknown) {
+            console.log("Error in CHEER:", e);
           }
         });
+
+        if (isDebugging) {
+          client.on("message", async (channel, userstate, message) => {
+            try {
+              console.log("MESSAGE:", { channel, userstate, message });
+
+              if (userstate?.bits && userstate.username) {
+                const usedBits = 100;
+                await initiateVapiResponse(
+                  channelName,
+                  userstate.username,
+                  usedBits,
+                  minBits,
+                  vapiAssistantId,
+                  vapiPublicKey,
+                  vapiInstance
+                );
+              }
+            } catch (e: unknown) {
+              console.log("Error in MESSAGE:", e);
+            }
+          });
+        }
       } catch (e: unknown) {
         console.log("Error connecting with TMI:", e);
       }
@@ -95,7 +138,14 @@ function App() {
         client.disconnect();
       }
     };
-  }, [channelName, minBits, vapiInstance, vapiAssistantId]);
+  }, [
+    channelName,
+    minBits,
+    vapiInstance,
+    vapiAssistantId,
+    vapiPublicKey,
+    isDebugging,
+  ]);
 
   useEffect(() => {
     if (vapiPublicKey) {
@@ -168,6 +218,15 @@ function App() {
       </Flex>
 
       <Flex w="400px" direction="column" gap="1rem">
+        <Flex direction="column" align={"flex-start"}>
+          <Checkbox
+            checked={isDebugging}
+            label="Enable Debugging via regular messages"
+            onChange={(e) => {
+              setIsDebugging(e.currentTarget.checked);
+            }}
+          />
+        </Flex>
         <Flex direction="column" align={"flex-start"}>
           <label htmlFor="channel-name">Channel Name</label>
           <Input
