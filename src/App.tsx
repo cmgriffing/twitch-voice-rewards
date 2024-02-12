@@ -170,7 +170,7 @@ function App() {
           });
         } else {
           // is this the right place?
-          vapi.stop();
+          // vapi.stop();
         }
       });
 
@@ -208,6 +208,8 @@ function App() {
       });
 
       setVapiInstance(vapi);
+    } else {
+      setVapiInstance(undefined);
     }
   }, [vapiPublicKey]);
 
