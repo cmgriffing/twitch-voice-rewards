@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Vapi from "@vapi-ai/web";
 import { Input, Flex, Text, PasswordInput, Checkbox } from "@mantine/core";
 
@@ -29,6 +29,7 @@ async function initiateVapiResponse(
   minBits: number,
   vapiAssistantId: string,
   vapiPublicKey: string,
+  userQueue: string[],
   vapiInstance?: Vapi
 ) {
   if (minBits < 1) {
@@ -40,14 +41,10 @@ async function initiateVapiResponse(
     // do the vapi thing
     if (vapiInstance) {
       try {
-        await vapiInstance.start(vapiAssistantId);
-        await vapiInstance.send({
-          type: "add-message",
-          message: {
-            role: "user",
-            content: `The username is ${username}`,
-          },
-        });
+        if (userQueue.length < 1) {
+          await vapiInstance.start(vapiAssistantId);
+        }
+        userQueue.push(username);
       } catch (e: unknown) {
         console.log("Error starting assistant or sending message.", e);
       }
@@ -68,6 +65,7 @@ function App() {
   const [minBits, setMinBits] = useState(100);
   const [vapiInstance, setVapiInstance] = useState<Vapi>();
   const [isDebugging, setIsDebugging] = useState(false);
+  const userQueue = useRef<string[]>([]);
 
   useEffect(() => {
     const client = new tmi.Client({
@@ -87,7 +85,7 @@ function App() {
           try {
             console.log("CHEER:", { channel, userstate, message });
             if (userstate?.bits && userstate.username) {
-              const usedBits = parseInt(userstate?.bits, 10);
+              const usedBits = parseInt(userstate?.bits || "0", 10);
               await initiateVapiResponse(
                 channelName,
                 userstate.username,
@@ -95,6 +93,7 @@ function App() {
                 minBits,
                 vapiAssistantId,
                 vapiPublicKey,
+                userQueue.current,
                 vapiInstance
               );
             }
@@ -117,6 +116,7 @@ function App() {
                   minBits,
                   vapiAssistantId,
                   vapiPublicKey,
+                  userQueue.current,
                   vapiInstance
                 );
               }
@@ -155,14 +155,39 @@ function App() {
         console.log("Speech has started");
       });
 
-      vapi.on("speech-end", () => {
+      vapi.on("speech-end", async () => {
         console.log("Speech has ended");
-        // is this the right place?
-        vapi.stop();
+
+        const username = userQueue.current.shift();
+
+        if (username) {
+          await vapi.send({
+            type: "add-message",
+            message: {
+              role: "user",
+              content: `The username is ${username}`,
+            },
+          });
+        } else {
+          // is this the right place?
+          vapi.stop();
+        }
       });
 
-      vapi.on("call-start", () => {
+      vapi.on("call-start", async () => {
         console.log("Call has started");
+
+        const username = userQueue.current.shift();
+
+        if (username) {
+          await vapi.send({
+            type: "add-message",
+            message: {
+              role: "user",
+              content: `The username is ${username}`,
+            },
+          });
+        }
       });
 
       vapi.on("call-end", () => {
