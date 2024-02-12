@@ -1,9 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import Vapi from "@vapi-ai/web";
 import { Input, Flex, Text, PasswordInput, Checkbox } from "@mantine/core";
+import { useAtom } from "jotai";
 
 import "./App.css";
 import tmi from "tmi.js";
+import {
+  channelNameState,
+  minBitsState,
+  vapiAssistantIdState,
+  vapiPublicKeyState,
+} from "./state";
 
 /*
 
@@ -59,10 +66,10 @@ async function initiateVapiResponse(
 }
 
 function App() {
-  const [channelName, setChannelName] = useState("");
-  const [vapiPublicKey, setVapiPublicKey] = useState("");
-  const [vapiAssistantId, setVapiAssistantId] = useState("");
-  const [minBits, setMinBits] = useState(100);
+  const [channelName, setChannelName] = useAtom(channelNameState);
+  const [vapiPublicKey, setVapiPublicKey] = useAtom(vapiPublicKeyState);
+  const [vapiAssistantId, setVapiAssistantId] = useAtom(vapiAssistantIdState);
+  const [minBits, setMinBits] = useAtom(minBitsState);
   const [vapiInstance, setVapiInstance] = useState<Vapi>();
   const [isDebugging, setIsDebugging] = useState(false);
   const userQueue = useRef<string[]>([]);
