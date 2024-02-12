@@ -108,7 +108,7 @@ function App() {
             try {
               console.log("MESSAGE:", { channel, userstate, message });
 
-              if (userstate?.bits && userstate.username) {
+              if (userstate.username) {
                 const usedBits = 100;
                 await initiateVapiResponse(
                   channelName,
