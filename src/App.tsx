@@ -107,7 +107,7 @@ function App() {
             try {
               console.log("MESSAGE:", { channel, userstate, message });
 
-              if (userstate.username) {
+              if (userstate.username && userstate.username === "cmgriffing") {
                 const usedBits = 100;
                 await initiateVapiResponse(
                   channelName,
