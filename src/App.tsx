@@ -191,6 +191,98 @@ function App() {
           }
         );
 
+        client.on(
+          "subgift",
+          async (
+            channel,
+            username,
+            streakMonths,
+            recipient,
+            methods,
+            userstate
+          ) => {
+            console.log("SUBGIFT", {
+              channel,
+              username,
+              streakMonths,
+              recipient,
+              methods,
+              userstate,
+            });
+
+            const giftedUsername =
+              userstate["msg-param-sender-count"] ||
+              userstate["msg-param-recipient-user-name"];
+
+            if (giftedUsername) {
+              await initiateVapiResponse(
+                channelName,
+                giftedUsername,
+                minBits + 1,
+                minBits,
+                vapiAssistantId,
+                vapiPublicKey,
+                userQueue,
+                vapiInstance
+              );
+            }
+          }
+        );
+
+        client.on(
+          "submysterygift",
+          async (channel, username, numbOfSubs, methods, userstate) => {
+            console.log("SUBMYSTERYGIFT", {
+              channel,
+              username,
+              numbOfSubs,
+              methods,
+              userstate,
+            });
+
+            const giftedUsername =
+              userstate["msg-param-sender-count"] ||
+              userstate["msg-param-recipient-user-name"];
+
+            if (giftedUsername) {
+              await initiateVapiResponse(
+                channelName,
+                giftedUsername,
+                minBits + 1,
+                minBits,
+                vapiAssistantId,
+                vapiPublicKey,
+                userQueue,
+                vapiInstance
+              );
+            }
+          }
+        );
+
+        client.on(
+          "subscription",
+          async (channel, username, method, message, userstate) => {
+            console.log("SUBSCRIPTION", {
+              channel,
+              username,
+              method,
+              message,
+              userstate,
+            });
+
+            await initiateVapiResponse(
+              channelName,
+              userstate.username,
+              minBits + 1,
+              minBits,
+              vapiAssistantId,
+              vapiPublicKey,
+              userQueue,
+              vapiInstance
+            );
+          }
+        );
+
         if (isDebugging) {
           client.on("message", async (channel, userstate, message) => {
             try {
