@@ -13,6 +13,8 @@ import {
   vapiPublicKeyState,
 } from "./state";
 
+const userCache: Record<string, number> = {};
+
 /*
 
 fields needed for config
@@ -30,6 +32,9 @@ fields needed for config
 
 */
 
+const userCacheTTL = 60 * 1000;
+
+// uses global state for simplicity for now
 async function initiateVapiResponse(
   channel: string,
   username: string,
@@ -49,9 +54,19 @@ async function initiateVapiResponse(
     // do the vapi thing
     if (vapiInstance) {
       try {
+        if (
+          userCache[username] &&
+          Date.now() < userCache[username] + userCacheTTL
+        ) {
+          console.log("User is still in cache:", username);
+          return;
+        } else {
+          userCache[username] = Date.now();
+        }
         if (userQueue.length < 1) {
           await vapiInstance.start(vapiAssistantId);
         }
+
         userQueue.push(username);
       } catch (e: unknown) {
         console.log("Error starting assistant or sending message.", e);
