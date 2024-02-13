@@ -58,7 +58,7 @@ async function initiateVapiResponse(
   vapiInstance?: Vapi
 ) {
   if (minBits < 1) {
-    console.log("Min Bits must be greater than 1.");
+    console.log("Min Bits must be greater than or equal 1.");
     return;
   }
 
@@ -101,14 +101,16 @@ function handleSpeechEnd(
   vapi: Vapi,
   isSpeaking: { current: boolean }
 ) {
-  const username = queue.current.shift();
-
-  console.log("queue: ", queue.current);
-
   if (isSpeaking.current) {
     console.log("Still speaking, bailing out of speech end");
     return;
   }
+
+  console.log("queue after shift: ", queue.current);
+
+  const username = queue.current.shift();
+
+  console.log("queue after shift: ", queue.current);
 
   if (username) {
     sendMessageToVapi(vapi, username);
