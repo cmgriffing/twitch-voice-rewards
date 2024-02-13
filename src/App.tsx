@@ -210,9 +210,10 @@ function App() {
               userstate,
             });
 
-            const giftedUsername =
-              userstate["msg-param-sender-count"] ||
-              userstate["msg-param-recipient-user-name"];
+            const giftedUsername: string =
+              userstate["msg-param-recipient-display-name"] ??
+              userstate["msg-param-recipient-user-name"] ??
+              "";
 
             if (giftedUsername) {
               await initiateVapiResponse(
@@ -240,9 +241,10 @@ function App() {
               userstate,
             });
 
-            const giftedUsername =
-              userstate["msg-param-sender-count"] ||
-              userstate["msg-param-recipient-user-name"];
+            const giftedUsername: string =
+              userstate["msg-param-recipient-display-name"] ??
+              userstate["msg-param-recipient-user-name"] ??
+              "";
 
             if (giftedUsername) {
               await initiateVapiResponse(
