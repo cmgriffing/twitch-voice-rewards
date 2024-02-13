@@ -167,6 +167,30 @@ function App() {
           }
         });
 
+        client.on(
+          "subscription",
+          async (channel, username, method, message, userstate) => {
+            console.log("SUBSCRIPTION", {
+              channel,
+              username,
+              method,
+              message,
+              userstate,
+            });
+
+            await initiateVapiResponse(
+              channelName,
+              userstate.username,
+              minBits + 1,
+              minBits,
+              vapiAssistantId,
+              vapiPublicKey,
+              userQueue,
+              vapiInstance
+            );
+          }
+        );
+
         if (isDebugging) {
           client.on("message", async (channel, userstate, message) => {
             try {
