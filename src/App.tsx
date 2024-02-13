@@ -227,7 +227,7 @@ function App() {
         console.log("Speech has ended");
         isSpeaking.current = false;
 
-        speechEndHandler(userQueue.current, vapi, isSpeaking);
+        speechEndHandler(userQueue, vapi, isSpeaking);
       });
 
       vapi.on("call-start", async () => {
