@@ -66,8 +66,17 @@ async function initiateVapiResponse(
   }
 }
 
-function handleSpeechEnd(queue: string[], vapi: Vapi) {
+function handleSpeechEnd(
+  queue: string[],
+  vapi: Vapi,
+  isSpeaking: { current: boolean }
+) {
   const username = queue.shift();
+
+  if (isSpeaking.current) {
+    console.log("Still speaking, bailing out of speech end");
+    return;
+  }
 
   if (username) {
     vapi.send({
@@ -93,6 +102,7 @@ function App() {
   const [vapiInstance, setVapiInstance] = useState<Vapi>();
   const [isDebugging, setIsDebugging] = useState(false);
   const userQueue = useRef<string[]>([]);
+  const isSpeaking = useRef(false);
 
   useEffect(() => {
     const client = new tmi.Client({
@@ -184,12 +194,14 @@ function App() {
 
       vapi.on("speech-start", () => {
         console.log("Speech has started");
+        isSpeaking.current = true;
       });
 
       vapi.on("speech-end", async () => {
         console.log("Speech has ended");
+        isSpeaking.current = false;
 
-        speechEndHandler(userQueue.current, vapi);
+        speechEndHandler(userQueue.current, vapi, isSpeaking);
       });
 
       vapi.on("call-start", async () => {
