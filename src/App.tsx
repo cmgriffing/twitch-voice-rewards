@@ -32,6 +32,18 @@ fields needed for config
 
 */
 
+function sendMessageToVapi(vapi: Vapi, username?: string) {
+  if (username) {
+    vapi.send({
+      type: "add-message",
+      message: {
+        role: "user",
+        content: `The username is ${username}`,
+      },
+    });
+  }
+}
+
 const userCacheTTL = 60 * 1000;
 
 // uses global state for simplicity for now
@@ -88,19 +100,15 @@ function handleSpeechEnd(
 ) {
   const username = queue.shift();
 
+  console.log("queue: ", queue);
+
   if (isSpeaking.current) {
     console.log("Still speaking, bailing out of speech end");
     return;
   }
 
   if (username) {
-    vapi.send({
-      type: "add-message",
-      message: {
-        role: "user",
-        content: `The username is ${username}`,
-      },
-    });
+    sendMessageToVapi(vapi, username);
   } else {
     // is this the right place?
     vapi.stop();
@@ -121,7 +129,7 @@ function App() {
 
   useEffect(() => {
     const client = new tmi.Client({
-      options: { debug: true },
+      // options: { debug: true },
       // identity: {
       //   username: 'bot_name',
       //   password: 'oauth:my_bot_token'
@@ -223,16 +231,7 @@ function App() {
         console.log("Call has started");
 
         const username = userQueue.current.shift();
-
-        if (username) {
-          await vapi.send({
-            type: "add-message",
-            message: {
-              role: "user",
-              content: `The username is ${username}`,
-            },
-          });
-        }
+        sendMessageToVapi(vapi, username);
       });
 
       vapi.on("call-end", () => {
@@ -244,9 +243,9 @@ function App() {
       // });
 
       // Function calls and transcripts will be sent via messages
-      vapi.on("message", (message) => {
-        console.log(message);
-      });
+      // vapi.on("message", (message) => {
+      //   console.log("message", message);
+      // });
 
       vapi.on("error", (e) => {
         console.error(e);
