@@ -285,6 +285,31 @@ function App() {
           }
         );
 
+        client.on(
+          "resub",
+          async (channel, username, method, message, userstate) => {
+            console.log("RESUB", {
+              channel,
+              username,
+              method,
+              message,
+              userstate,
+            });
+
+            await initiateVapiResponse(
+              channelName,
+              userstate.username,
+              minBits + 1,
+              minBits,
+              vapiAssistantId,
+              vapiPublicKey,
+              userQueue,
+              vapiInstance
+            );
+          }
+        );
+
+        // TODO: remove this?
         if (isDebugging) {
           client.on("message", async (channel, userstate, message) => {
             try {
@@ -435,21 +460,6 @@ function App() {
         </Flex>
 
         <Flex direction="column" align={"flex-start"}>
-          <label htmlFor="min-bits">Minimum Bits</label>
-          <Input
-            w="100%"
-            min={1}
-            id="min-bits"
-            name="min-bits"
-            type="number"
-            value={minBits}
-            onChange={(e) => {
-              setMinBits(e.currentTarget.valueAsNumber);
-            }}
-          />
-        </Flex>
-
-        <Flex direction="column" align={"flex-start"}>
           <label htmlFor="vapi-api-key">Vapi Public Key</label>
           <PasswordInput
             w="100%"
@@ -471,6 +481,25 @@ function App() {
             value={vapiAssistantId}
             onChange={(e) => {
               setVapiAssistantId(e.currentTarget.value);
+            }}
+          />
+        </Flex>
+
+        <Flex>
+          <Text fw={600}>Triggers</Text>
+        </Flex>
+
+        <Flex direction="column" align={"flex-start"}>
+          <label htmlFor="min-bits">Minimum Bits</label>
+          <Input
+            w="100%"
+            min={1}
+            id="min-bits"
+            name="min-bits"
+            type="number"
+            value={minBits}
+            onChange={(e) => {
+              setMinBits(e.currentTarget.valueAsNumber);
             }}
           />
         </Flex>
