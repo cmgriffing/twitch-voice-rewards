@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Vapi from "@vapi-ai/web";
 import { Input, Flex, Text, PasswordInput, Checkbox } from "@mantine/core";
 import { useAtom } from "jotai";
+import debounce from "lodash.debounce";
 
 import "./App.css";
 import tmi from "tmi.js";
@@ -64,6 +65,25 @@ async function initiateVapiResponse(
     }
   }
 }
+
+function handleSpeechEnd(queue: string[], vapi: Vapi) {
+  const username = queue.shift();
+
+  if (username) {
+    vapi.send({
+      type: "add-message",
+      message: {
+        role: "user",
+        content: `The username is ${username}`,
+      },
+    });
+  } else {
+    // is this the right place?
+    vapi.stop();
+  }
+}
+
+const speechEndHandler = debounce(handleSpeechEnd, 5000);
 
 function App() {
   const [channelName, setChannelName] = useAtom(channelNameState);
@@ -169,20 +189,7 @@ function App() {
       vapi.on("speech-end", async () => {
         console.log("Speech has ended");
 
-        const username = userQueue.current.shift();
-
-        if (username) {
-          await vapi.send({
-            type: "add-message",
-            message: {
-              role: "user",
-              content: `The username is ${username}`,
-            },
-          });
-        } else {
-          // is this the right place?
-          // vapi.stop();
-        }
+        speechEndHandler(userQueue.current, vapi);
       });
 
       vapi.on("call-start", async () => {
@@ -205,9 +212,9 @@ function App() {
         console.log("Call has stopped");
       });
 
-      vapi.on("volume-level", (volume) => {
-        console.log(`Assistant volume level: ${volume}`);
-      });
+      // vapi.on("volume-level", (volume) => {
+      //   console.log(`Assistant volume level: ${volume}`);
+      // });
 
       // Function calls and transcripts will be sent via messages
       vapi.on("message", (message) => {

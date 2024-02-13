@@ -14,11 +14,13 @@
     "@mantine/hooks": "^7.5.2",
     "@vapi-ai/web": "^1.0.256",
     "jotai": "^2.6.4",
+    "lodash.debounce": "^4.0.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tmi.js": "^1.8.5"
   },
   "devDependencies": {
+    "@types/lodash.debounce": "^4.0.9",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "@types/tmi.js": "^1.8.6",
