@@ -54,7 +54,7 @@ async function initiateVapiResponse(
   minBits: number,
   vapiAssistantId: string,
   vapiPublicKey: string,
-  userQueue: string[],
+  userQueue: { current: string[] },
   vapiInstance?: Vapi
 ) {
   if (minBits < 1) {
@@ -66,6 +66,7 @@ async function initiateVapiResponse(
     // do the vapi thing
     if (vapiInstance) {
       try {
+        // user caching to prevent messages too often. maybe temporary
         if (
           userCache[username] &&
           Date.now() < userCache[username] + userCacheTTL
@@ -75,11 +76,13 @@ async function initiateVapiResponse(
         } else {
           userCache[username] = Date.now();
         }
-        if (userQueue.length < 1) {
+
+        if (userQueue.current.length < 1) {
           await vapiInstance.start(vapiAssistantId);
         }
 
-        userQueue.push(username);
+        userQueue.current.push(username);
+        console.log("pushed to queue", userQueue.current);
       } catch (e: unknown) {
         console.log("Error starting assistant or sending message.", e);
       }
@@ -94,13 +97,13 @@ async function initiateVapiResponse(
 }
 
 function handleSpeechEnd(
-  queue: string[],
+  queue: { current: string[] },
   vapi: Vapi,
   isSpeaking: { current: boolean }
 ) {
-  const username = queue.shift();
+  const username = queue.current.shift();
 
-  console.log("queue: ", queue);
+  console.log("queue: ", queue.current);
 
   if (isSpeaking.current) {
     console.log("Still speaking, bailing out of speech end");
@@ -153,7 +156,7 @@ function App() {
                 minBits,
                 vapiAssistantId,
                 vapiPublicKey,
-                userQueue.current,
+                userQueue,
                 vapiInstance
               );
             }
@@ -180,7 +183,7 @@ function App() {
                   minBits,
                   vapiAssistantId,
                   vapiPublicKey,
-                  userQueue.current,
+                  userQueue,
                   vapiInstance
                 );
               }
