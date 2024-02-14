@@ -172,10 +172,7 @@ function App() {
   );
 
   const [vapiInstance, setVapiInstance] = useState<Vapi>();
-  const [
-    isDebugging,
-    // setIsDebugging
-  ] = useState(false);
+  const [isDebugging, setIsDebugging] = useState(false);
   const userQueue = useRef<string[]>([]);
   const isSpeaking = useRef(false);
 
