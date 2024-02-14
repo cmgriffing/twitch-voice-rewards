@@ -302,7 +302,7 @@ function App() {
 
               await initiateVapiResponse(
                 channelName,
-                userstate.username,
+                username,
                 minBits + 1,
                 minBits,
                 vapiAssistantId,
