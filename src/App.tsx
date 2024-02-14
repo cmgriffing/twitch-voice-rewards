@@ -160,21 +160,24 @@ function App() {
   const [channelName, setChannelName] = useAtom(channelNameState);
   const [vapiPublicKey, setVapiPublicKey] = useAtom(vapiPublicKeyState);
   const [vapiAssistantId, setVapiAssistantId] = useAtom(vapiAssistantIdState);
-  const [minBits, setMinBits] = useAtom(minBitsState);
-  const [vapiInstance, setVapiInstance] = useState<Vapi>();
-  const [isDebugging, setIsDebugging] = useState(false);
-  const userQueue = useRef<string[]>([]);
-  const isSpeaking = useRef(false);
-
   const [shouldTriggerBits, setShouldTriggerBits] = useAtom(
     shouldTriggerBitsState
   );
+  const [minBits, setMinBits] = useAtom(minBitsState);
   const [shouldTriggerSubs, setShouldTriggerSubs] = useAtom(
     shouldTriggerSubsState
   );
   const [shouldTriggerGifts, setShouldTriggerGifts] = useAtom(
     shouldTriggerGiftsState
   );
+
+  const [vapiInstance, setVapiInstance] = useState<Vapi>();
+  const [
+    isDebugging,
+    // setIsDebugging
+  ] = useState(false);
+  const userQueue = useRef<string[]>([]);
+  const isSpeaking = useRef(false);
 
   useEffect(() => {
     const client = new tmi.Client({
