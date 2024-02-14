@@ -15,5 +15,5 @@ export const shouldTriggerSubsState = atomWithStorage(
 );
 export const shouldTriggerGiftsState = atomWithStorage(
   "shouldTriggerGifts",
-  true
+  false
 );
