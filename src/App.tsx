@@ -190,79 +190,116 @@ function App() {
       try {
         await client.connect();
 
-        client.on("cheer", async (channel, userstate, message) => {
-          try {
-            console.log("CHEER:", { channel, userstate, message });
-            if (userstate?.bits && userstate.username) {
-              const usedBits = parseInt(userstate?.bits || "0", 10);
-              await initiateVapiResponse(
-                channelName,
-                userstate.username,
-                usedBits,
-                minBits,
-                vapiAssistantId,
-                vapiPublicKey,
-                userQueue,
-                vapiInstance
-              );
+        if (shouldTriggerBits) {
+          client.on("cheer", async (channel, userstate, message) => {
+            try {
+              console.log("CHEER:", { channel, userstate, message });
+              if (userstate?.bits && userstate.username) {
+                const usedBits = parseInt(userstate?.bits || "0", 10);
+                await initiateVapiResponse(
+                  channelName,
+                  userstate.username,
+                  usedBits,
+                  minBits,
+                  vapiAssistantId,
+                  vapiPublicKey,
+                  userQueue,
+                  vapiInstance
+                );
+              }
+            } catch (e: unknown) {
+              console.log("Error in CHEER:", e);
             }
-          } catch (e: unknown) {
-            console.log("Error in CHEER:", e);
-          }
-        });
+          });
+        }
 
-        client.on(
-          "subscription",
-          async (channel, username, method, message, userstate) => {
-            console.log("SUBSCRIPTION", {
-              channel,
-              username,
-              method,
-              message,
-              userstate,
-            });
-
-            await initiateVapiResponse(
-              channelName,
-              userstate.username,
-              minBits + 1,
-              minBits,
-              vapiAssistantId,
-              vapiPublicKey,
-              userQueue,
-              vapiInstance
-            );
-          }
-        );
-
-        client.on(
-          "subgift",
-          async (
-            channel,
-            username,
-            streakMonths,
-            recipient,
-            methods,
-            userstate
-          ) => {
-            console.log("SUBGIFT", {
+        if (shouldTriggerGifts) {
+          client.on(
+            "subgift",
+            async (
               channel,
               username,
               streakMonths,
               recipient,
               methods,
-              userstate,
-            });
+              userstate
+            ) => {
+              console.log("SUBGIFT", {
+                channel,
+                username,
+                streakMonths,
+                recipient,
+                methods,
+                userstate,
+              });
 
-            const giftedUsername: string =
-              userstate["msg-param-recipient-display-name"] ??
-              userstate["msg-param-recipient-user-name"] ??
-              "";
+              const giftedUsername: string =
+                userstate["msg-param-recipient-display-name"] ??
+                userstate["msg-param-recipient-user-name"] ??
+                "";
 
-            if (giftedUsername) {
+              if (giftedUsername) {
+                await initiateVapiResponse(
+                  channelName,
+                  giftedUsername,
+                  minBits + 1,
+                  minBits,
+                  vapiAssistantId,
+                  vapiPublicKey,
+                  userQueue,
+                  vapiInstance
+                );
+              }
+            }
+          );
+
+          client.on(
+            "submysterygift",
+            async (channel, username, numbOfSubs, methods, userstate) => {
+              console.log("SUBMYSTERYGIFT", {
+                channel,
+                username,
+                numbOfSubs,
+                methods,
+                userstate,
+              });
+
+              const giftedUsername: string =
+                userstate["msg-param-recipient-display-name"] ??
+                userstate["msg-param-recipient-user-name"] ??
+                "";
+
+              if (giftedUsername) {
+                await initiateVapiResponse(
+                  channelName,
+                  giftedUsername,
+                  minBits + 1,
+                  minBits,
+                  vapiAssistantId,
+                  vapiPublicKey,
+                  userQueue,
+                  vapiInstance
+                );
+              }
+            }
+          );
+        }
+
+        if (shouldTriggerSubs) {
+          client.on(
+            "subscription",
+            async (channel, username, method, message, userstate) => {
+              console.log("SUBSCRIPTION", {
+                channel,
+                username,
+                method,
+                message,
+                userstate,
+              });
+
               await initiateVapiResponse(
                 channelName,
-                giftedUsername,
+                userstate.username,
                 minBits + 1,
                 minBits,
                 vapiAssistantId,
@@ -271,29 +308,22 @@ function App() {
                 vapiInstance
               );
             }
-          }
-        );
+          );
 
-        client.on(
-          "submysterygift",
-          async (channel, username, numbOfSubs, methods, userstate) => {
-            console.log("SUBMYSTERYGIFT", {
-              channel,
-              username,
-              numbOfSubs,
-              methods,
-              userstate,
-            });
+          client.on(
+            "resub",
+            async (channel, username, method, message, userstate) => {
+              console.log("RESUB", {
+                channel,
+                username,
+                method,
+                message,
+                userstate,
+              });
 
-            const giftedUsername: string =
-              userstate["msg-param-recipient-display-name"] ??
-              userstate["msg-param-recipient-user-name"] ??
-              "";
-
-            if (giftedUsername) {
               await initiateVapiResponse(
                 channelName,
-                giftedUsername,
+                username,
                 minBits + 1,
                 minBits,
                 vapiAssistantId,
@@ -302,56 +332,8 @@ function App() {
                 vapiInstance
               );
             }
-          }
-        );
-
-        client.on(
-          "subscription",
-          async (channel, username, method, message, userstate) => {
-            console.log("SUBSCRIPTION", {
-              channel,
-              username,
-              method,
-              message,
-              userstate,
-            });
-
-            await initiateVapiResponse(
-              channelName,
-              userstate.username,
-              minBits + 1,
-              minBits,
-              vapiAssistantId,
-              vapiPublicKey,
-              userQueue,
-              vapiInstance
-            );
-          }
-        );
-
-        client.on(
-          "resub",
-          async (channel, username, method, message, userstate) => {
-            console.log("RESUB", {
-              channel,
-              username,
-              method,
-              message,
-              userstate,
-            });
-
-            await initiateVapiResponse(
-              channelName,
-              username,
-              minBits + 1,
-              minBits,
-              vapiAssistantId,
-              vapiPublicKey,
-              userQueue,
-              vapiInstance
-            );
-          }
-        );
+          );
+        }
 
         // TODO: remove this?
         if (isDebugging) {
@@ -401,6 +383,9 @@ function App() {
     vapiAssistantId,
     vapiPublicKey,
     isDebugging,
+    shouldTriggerBits,
+    shouldTriggerGifts,
+    shouldTriggerSubs,
   ]);
 
   useEffect(() => {
@@ -454,16 +439,17 @@ function App() {
       // direction="column"
       mih="100vh"
       miw="100vw"
-      align={"center"}
+      align={"flex-start"}
       justify={"center"}
       gap="2rem"
       wrap={"wrap"}
+      p="2rem"
     >
-      <Flex w="400px" direction="column" gap="1rem">
-        <Text size="xl" fw={700}>
+      <Flex maw="400px" direction="column" gap="1rem">
+        <Text size="xl" fw={700} ta="center">
           🔊 Twitch Voice Rewards 🔊
         </Text>
-        <Text>
+        <Text ta="center">
           Reward your Twitch supporters with a Voice Assistant acknowledging
           them.
         </Text>
@@ -512,8 +498,11 @@ function App() {
         </Accordion>
       </Flex>
 
-      <Flex w="400px" direction="column" gap="1rem">
-        <Flex direction="column" align={"flex-start"}>
+      <Flex maw="400px" direction="column" gap="1rem">
+        <Text fw={600} ta="left">
+          Config
+        </Text>
+        {/* <Flex direction="column" align={"flex-start"}>
           <Checkbox
             checked={isDebugging}
             label="Enable Debugging via regular messages"
@@ -521,7 +510,7 @@ function App() {
               setIsDebugging(e.currentTarget.checked);
             }}
           />
-        </Flex>
+        </Flex> */}
         <Flex direction="column" align={"flex-start"}>
           <label htmlFor="channel-name">Channel Name</label>
           <Input
@@ -575,7 +564,7 @@ function App() {
               }}
             />
             {shouldTriggerBits && (
-              <Flex direction="column" align={"flex-start"}>
+              <Flex direction="column" align={"flex-start"} pl="2rem">
                 <label htmlFor="min-bits">Minimum Bits</label>
                 <Input
                   w="100%"
