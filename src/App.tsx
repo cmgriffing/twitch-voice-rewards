@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import Vapi from "@vapi-ai/web";
-import { Input, Flex, Text, PasswordInput, Checkbox } from "@mantine/core";
+import {
+  Input,
+  Flex,
+  Text,
+  PasswordInput,
+  Checkbox,
+  Accordion,
+} from "@mantine/core";
 import { useAtom } from "jotai";
 import debounce from "lodash.debounce";
 
@@ -9,11 +16,38 @@ import tmi from "tmi.js";
 import {
   channelNameState,
   minBitsState,
+  shouldTriggerBitsState,
+  shouldTriggerGiftsState,
+  shouldTriggerSubsState,
   vapiAssistantIdState,
   vapiPublicKeyState,
 } from "./state";
 
 const userCache: Record<string, number> = {};
+
+interface ExampleAssistantConfiguration {
+  icon: string; // unicode emoji
+  name: string;
+  initialMessage: string;
+  prompt: string;
+}
+
+const exampleAssistantConfigurations: ExampleAssistantConfiguration[] = [
+  {
+    icon: "🦸",
+    name: "Superhero",
+    initialMessage: "You're my hero.",
+    prompt: `When I tell you a username, I want you to imagine what kind of superhero they would be.
+    Describe them and their superpowers, and origin story while making sure to mention their name. Limit the description to 30 seconds. Make sure to always reference them as they or their.`,
+  },
+  {
+    icon: "🦹",
+    name: "Supervillain",
+    initialMessage: "It's not easy being evil.",
+    prompt: `When I tell you a username, I want you to imagine what kind of supervillain they would be.
+    Describe them and their superpowers, and origin story while making sure to mention their name. Limit the description to 30 seconds. Make sure to always reference them as they or their.`,
+  },
+];
 
 /*
 
@@ -131,6 +165,16 @@ function App() {
   const [isDebugging, setIsDebugging] = useState(false);
   const userQueue = useRef<string[]>([]);
   const isSpeaking = useRef(false);
+
+  const [shouldTriggerBits, setShouldTriggerBits] = useAtom(
+    shouldTriggerBitsState
+  );
+  const [shouldTriggerSubs, setShouldTriggerSubs] = useAtom(
+    shouldTriggerSubsState
+  );
+  const [shouldTriggerGifts, setShouldTriggerGifts] = useAtom(
+    shouldTriggerGiftsState
+  );
 
   useEffect(() => {
     const client = new tmi.Client({
@@ -298,7 +342,7 @@ function App() {
 
             await initiateVapiResponse(
               channelName,
-              userstate.username,
+              username,
               minBits + 1,
               minBits,
               vapiAssistantId,
@@ -413,27 +457,59 @@ function App() {
       align={"center"}
       justify={"center"}
       gap="2rem"
+      wrap={"wrap"}
     >
       <Flex w="400px" direction="column" gap="1rem">
         <Text size="xl" fw={700}>
-          🦸‍♂️ SuperViewers 🦸‍♀️
+          🔊 Twitch Voice Rewards 🔊
         </Text>
-        <Text>Imagine your Twitch viewers as superheroes!</Text>
-        <Text ta={"left"} fw={600}>
-          How It Works
+        <Text>
+          Reward your Twitch supporters with a Voice Assistant acknowledging
+          them.
         </Text>
-        <Text ta={"left"}>
-          When a viewer donates more bits than the minimum bits value, Superhero
-          Me will look at their username and imagine them as a super hero. Using
-          a natural sounding voice (hardcoded for now), it may talk about their
-          powers and/or origin story or possibly even their visual aesthetic.
-          This is all done using Vapi.ai's voice assistant functionality.
-        </Text>
+
         <Text ta={"left"}>
           <Text fw={700}>Note: </Text>
           To use this bot, you will need to sign up for{" "}
           <a href="https://vapi.ai?rel=cmgriffing">Vapi.ai</a>
         </Text>
+
+        <Text ta={"left"} fw={600}>
+          How It Works
+        </Text>
+        <Text ta={"left"}>
+          When a viewer meets the criteria of one of your triggers, this bot
+          will acknowledge them based on their name. It can use any assistant
+          you set up via Vapi.ai. We have a couple existing sets of
+          configuration that you may wish to copy/paste.
+        </Text>
+
+        <Text ta={"left"} fw={600}>
+          Examples
+        </Text>
+        <Accordion>
+          {exampleAssistantConfigurations.map((config) => (
+            <Accordion.Item key={config.name} value={config.name}>
+              <Accordion.Control icon={config.icon}>
+                {config.name}
+              </Accordion.Control>
+              <Accordion.Panel>
+                <Flex direction="column">
+                  <Flex direction="column" align="flex-start">
+                    <Text fw="600">Initial Message</Text>
+                    <Text pl="1rem">{config.initialMessage}</Text>
+                  </Flex>
+                  <Flex direction="column" align="flex-start">
+                    <Text fw="600">Prompt</Text>
+                    <Text pl="1rem" ta={"left"}>
+                      {config.prompt}
+                    </Text>
+                  </Flex>
+                </Flex>
+              </Accordion.Panel>
+            </Accordion.Item>
+          ))}
+        </Accordion>
       </Flex>
 
       <Flex w="400px" direction="column" gap="1rem">
@@ -485,23 +561,52 @@ function App() {
           />
         </Flex>
 
-        <Flex>
+        <Flex direction="column" align="flex-start" gap="1rem">
           <Text fw={600}>Triggers</Text>
-        </Flex>
 
-        <Flex direction="column" align={"flex-start"}>
-          <label htmlFor="min-bits">Minimum Bits</label>
-          <Input
-            w="100%"
-            min={1}
-            id="min-bits"
-            name="min-bits"
-            type="number"
-            value={minBits}
-            onChange={(e) => {
-              setMinBits(e.currentTarget.valueAsNumber);
-            }}
-          />
+          <Text>You must configure at least one trigger.</Text>
+
+          <Flex direction="column" gap="1rem">
+            <Checkbox
+              label="Bits"
+              checked={shouldTriggerBits}
+              onChange={(e) => {
+                setShouldTriggerBits(e.currentTarget.checked);
+              }}
+            />
+            {shouldTriggerBits && (
+              <Flex direction="column" align={"flex-start"}>
+                <label htmlFor="min-bits">Minimum Bits</label>
+                <Input
+                  w="100%"
+                  min={1}
+                  id="min-bits"
+                  name="min-bits"
+                  type="number"
+                  value={minBits}
+                  onChange={(e) => {
+                    setMinBits(e.currentTarget.valueAsNumber);
+                  }}
+                />
+              </Flex>
+            )}
+
+            <Checkbox
+              label="Subscriptions (includes Resubs)"
+              checked={shouldTriggerSubs}
+              onChange={(e) => {
+                setShouldTriggerSubs(e.currentTarget.checked);
+              }}
+            />
+
+            <Checkbox
+              label="Gifted Subscriptions (includes anonymous)"
+              checked={shouldTriggerGifts}
+              onChange={(e) => {
+                setShouldTriggerGifts(e.currentTarget.checked);
+              }}
+            />
+          </Flex>
         </Flex>
       </Flex>
     </Flex>
