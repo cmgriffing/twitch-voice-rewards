@@ -505,7 +505,7 @@ function App() {
         <Text fw={600} ta="left">
           Config
         </Text>
-        {/* <Flex direction="column" align={"flex-start"}>
+        <Flex direction="column" align={"flex-start"}>
           <Checkbox
             checked={isDebugging}
             label="Enable Debugging via regular messages"
@@ -513,7 +513,7 @@ function App() {
               setIsDebugging(e.currentTarget.checked);
             }}
           />
-        </Flex> */}
+        </Flex>
         <Flex direction="column" align={"flex-start"}>
           <label htmlFor="channel-name">Channel Name</label>
           <Input
