@@ -24,4 +24,4 @@ export const shouldTriggerRaidsState = atomWithStorage(
   "shouldTriggerRaids",
   false
 );
-export const minRaidersState = atomWithStorage("minRaiders", 100);
+export const minRaidersState = atomWithStorage("minRaiders", 10);
