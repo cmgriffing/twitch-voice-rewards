@@ -15,10 +15,12 @@ import "./App.css";
 import tmi from "tmi.js";
 import {
   channelNameState,
-  minBitsState,
   shouldTriggerBitsState,
+  minBitsState,
   shouldTriggerGiftsState,
   shouldTriggerSubsState,
+  shouldTriggerRaidsState,
+  minRaidersState,
   vapiAssistantIdState,
   vapiPublicKeyState,
 } from "./state";
@@ -170,6 +172,11 @@ function App() {
   const [shouldTriggerGifts, setShouldTriggerGifts] = useAtom(
     shouldTriggerGiftsState
   );
+
+  const [shouldTriggerRaids, setShouldTriggerRaids] = useAtom(
+    shouldTriggerRaidsState
+  );
+  const [minRaiders, setMinRaiders] = useAtom(minRaidersState);
 
   const [vapiInstance, setVapiInstance] = useState<Vapi>();
   const [isDebugging, setIsDebugging] = useState(false);
@@ -335,6 +342,31 @@ function App() {
           );
         }
 
+        if (shouldTriggerRaids) {
+          client.on("raided", async (channel, username, viewers) => {
+            console.log("RAIDED", {
+              channel,
+              username,
+              viewers,
+            });
+
+            if (viewers >= minRaiders) {
+              setTimeout(() => {
+                initiateVapiResponse(
+                  channelName,
+                  username,
+                  minBits + 1,
+                  minBits,
+                  vapiAssistantId,
+                  vapiPublicKey,
+                  userQueue,
+                  vapiInstance
+                );
+              }, 10000);
+            }
+          });
+        }
+
         // TODO: remove this?
         if (isDebugging) {
           client.on("message", async (channel, userstate, message) => {
@@ -378,14 +410,16 @@ function App() {
     };
   }, [
     channelName,
-    minBits,
     vapiInstance,
     vapiAssistantId,
     vapiPublicKey,
     isDebugging,
     shouldTriggerBits,
+    minBits,
     shouldTriggerGifts,
     shouldTriggerSubs,
+    shouldTriggerRaids,
+    minRaiders,
   ]);
 
   useEffect(() => {
@@ -595,6 +629,30 @@ function App() {
                 setShouldTriggerGifts(e.currentTarget.checked);
               }}
             />
+
+            <Checkbox
+              label="Bits"
+              checked={shouldTriggerRaids}
+              onChange={(e) => {
+                setShouldTriggerRaids(e.currentTarget.checked);
+              }}
+            />
+            {shouldTriggerRaids && (
+              <Flex direction="column" align={"flex-start"} pl="2rem">
+                <label htmlFor="min-raiders">Minimum Raiders</label>
+                <Input
+                  w="100%"
+                  min={1}
+                  id="min-raiders"
+                  name="min-raiders"
+                  type="number"
+                  value={minRaiders}
+                  onChange={(e) => {
+                    setMinRaiders(e.currentTarget.valueAsNumber);
+                  }}
+                />
+              </Flex>
+            )}
           </Flex>
         </Flex>
       </Flex>
