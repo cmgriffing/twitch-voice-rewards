@@ -631,7 +631,7 @@ function App() {
             />
 
             <Checkbox
-              label="Bits"
+              label="Raids"
               checked={shouldTriggerRaids}
               onChange={(e) => {
                 setShouldTriggerRaids(e.currentTarget.checked);
