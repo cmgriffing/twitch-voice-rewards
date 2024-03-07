@@ -8,7 +8,6 @@ import {
   Checkbox,
   Accordion,
   Button,
-  Box,
 } from "@mantine/core";
 import { useAtom } from "jotai";
 import debounce from "lodash.debounce";
