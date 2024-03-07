@@ -7,6 +7,8 @@ import {
   PasswordInput,
   Checkbox,
   Accordion,
+  Button,
+  Box,
 } from "@mantine/core";
 import { useAtom } from "jotai";
 import debounce from "lodash.debounce";
@@ -180,6 +182,7 @@ function App() {
 
   const [vapiInstance, setVapiInstance] = useState<Vapi>();
   const [isDebugging, setIsDebugging] = useState(false);
+  const [manualUsername, setManualUsername] = useState("");
   const userQueue = useRef<string[]>([]);
   const isSpeaking = useRef(false);
 
@@ -653,6 +656,48 @@ function App() {
                 />
               </Flex>
             )}
+          </Flex>
+        </Flex>
+
+        <Flex direction="column" bg={"#ffeeee"} p="1rem" gap="1rem">
+          <Text fw={600}>Manual Trigger</Text>
+          <Text>
+            Occasionally, the bot might make a mistake. If you would like to
+            manually trigger an announcement, you can use this form by pasting
+            the username yourself.
+          </Text>
+          <Flex direction="column" align={"flex-start"}>
+            <label htmlFor="manual-username">Username</label>
+            <Input
+              w="100%"
+              id="manual-username"
+              name="manual-username"
+              type="text"
+              value={manualUsername}
+              onChange={(e) => {
+                setManualUsername(e.currentTarget.value);
+              }}
+            />
+          </Flex>
+          <Flex align="flex-end" justify={"flex-end"} w={"100%"}>
+            <Button
+              onClick={async () => {
+                await initiateVapiResponse(
+                  channelName,
+                  manualUsername,
+                  minBits + 1,
+                  minBits,
+                  vapiAssistantId,
+                  vapiPublicKey,
+                  userQueue,
+                  vapiInstance
+                );
+
+                setManualUsername("");
+              }}
+            >
+              Send
+            </Button>
           </Flex>
         </Flex>
       </Flex>
