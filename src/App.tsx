@@ -659,45 +659,47 @@ function App() {
         </Flex>
 
         <Flex direction="column" bg={"#ffeeee"} p="1rem" gap="1rem">
-          <Text fw={600}>Manual Trigger</Text>
-          <Text>
-            Occasionally, the bot might make a mistake. If you would like to
-            manually trigger an announcement, you can use this form by pasting
-            the username yourself.
-          </Text>
-          <Flex direction="column" align={"flex-start"}>
-            <label htmlFor="manual-username">Username</label>
-            <Input
-              w="100%"
-              id="manual-username"
-              name="manual-username"
-              type="text"
-              value={manualUsername}
-              onChange={(e) => {
-                setManualUsername(e.currentTarget.value);
-              }}
-            />
-          </Flex>
-          <Flex align="flex-end" justify={"flex-end"} w={"100%"}>
-            <Button
-              onClick={async () => {
-                await initiateVapiResponse(
-                  channelName,
-                  manualUsername,
-                  minBits + 1,
-                  minBits,
-                  vapiAssistantId,
-                  vapiPublicKey,
-                  userQueue,
-                  vapiInstance
-                );
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
 
-                setManualUsername("");
-              }}
-            >
-              Send
-            </Button>
-          </Flex>
+              await initiateVapiResponse(
+                channelName,
+                manualUsername,
+                minBits + 1,
+                minBits,
+                vapiAssistantId,
+                vapiPublicKey,
+                userQueue,
+                vapiInstance
+              );
+
+              setManualUsername("");
+            }}
+          >
+            <Text fw={600}>Manual Trigger</Text>
+            <Text>
+              Occasionally, the bot might make a mistake. If you would like to
+              manually trigger an announcement, you can use this form by pasting
+              the username yourself.
+            </Text>
+            <Flex direction="column" align={"flex-start"}>
+              <label htmlFor="manual-username">Username</label>
+              <Input
+                w="100%"
+                id="manual-username"
+                name="manual-username"
+                type="text"
+                value={manualUsername}
+                onChange={(e) => {
+                  setManualUsername(e.currentTarget.value);
+                }}
+              />
+            </Flex>
+            <Flex align="flex-end" justify={"flex-end"} w={"100%"}>
+              <Button type="submit">Send</Button>
+            </Flex>
+          </form>
         </Flex>
       </Flex>
     </Flex>
